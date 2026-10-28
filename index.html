@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Campus Compute Scheduler</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f3f6f4;--card:#fff;--tx:#12201a;--mu:#5d6b64;--bd:#d9e1dc;--ac:#0f7b5f;--acs:#dff1ea;--wa:#b86a10;--was:#fdf0dc;--bad:#c23b3b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1512;--card:#17211c;--tx:#e6efe9;--mu:#92a39a;--bd:#2a3a32;--ac:#3fcf9f;--acs:#173a2e;--wa:#f0a64a;--was:#3a2c14;--bad:#f07272}}
+:root[data-theme="dark"]{--bg:#0e1512;--card:#17211c;--tx:#e6efe9;--mu:#92a39a;--bd:#2a3a32;--ac:#3fcf9f;--acs:#173a2e;--wa:#f0a64a;--was:#3a2c14;--bad:#f07272}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 "Avenir Next",Avenir,"Segoe UI",system-ui,sans-serif}
+main{max-width:800px;margin:0 auto;padding:16px}
+h1{font-size:24px;line-height:1.2;margin:4px 0;letter-spacing:-.01em}
+h3{margin:0 0 4px;font-size:17px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.role{font-size:13px;background:var(--acs);color:var(--ac);padding:3px 10px;border-radius:99px;font-weight:700}
+.sub{color:var(--mu);margin:0 0 12px;font-size:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input,select,button{font:inherit;color:inherit}
+input,select{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;min-height:40px}
+button{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;min-height:40px;cursor:pointer}
+a{color:var(--ac);font-weight:600}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--bd);margin:12px 0;overflow-x:auto}
+.tabs button{border:0;border-bottom:3px solid transparent;border-radius:0;background:none;color:var(--mu);font-weight:600;white-space:nowrap}
+.tabs button[aria-selected=true]{color:var(--ac);border-bottom-color:var(--ac)}
+.chip{padding:6px 10px;min-height:36px;font-size:14px}
+.chip.on{background:var(--ac);border-color:var(--ac);color:var(--bg);font-weight:600}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px;margin-top:12px}
+.slot{text-align:left;font-size:13px;line-height:1.3;padding:8px}
+.slot b{display:block;font-size:14px}
+.slot.free{background:var(--acs);border-color:transparent}
+.slot.mine{background:var(--ac);color:var(--bg);border-color:var(--ac)}
+.slot:disabled{opacity:.5;cursor:not-allowed}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:10px}
+.mu{color:var(--mu);font-size:13px}
+.bar{height:10px;background:var(--bd);border-radius:6px;overflow:hidden;margin:6px 0 2px}
+.bar i{display:block;height:100%;background:var(--ac);transition:width .8s}
+.alert{background:var(--was);color:var(--wa);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:14px}
+.alert button{margin-top:6px;margin-right:6px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:10px}
+.stat{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px}
+.stat b{display:block;font-size:26px;line-height:1.1}
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:460px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--bd)}
+.heat{display:grid;grid-template-columns:34px repeat(14,1fr);gap:2px;font-size:10px;min-width:420px}
+.heat div{height:24px;border-radius:3px;display:flex;align-items:center;color:var(--mu)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--tx);color:var(--bg);padding:10px 14px;border-radius:8px;font-size:14px;max-width:90%;z-index:5}
+.note{font-size:13px;color:var(--mu);margin-top:18px}
+.empty{color:var(--mu);padding:8px 0}
+main{padding:20px 16px 48px}
+.top{padding-bottom:14px;border-bottom:1px solid var(--bd);margin-bottom:14px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:40px;height:40px;border-radius:12px;background:var(--ac);display:grid;place-items:center;flex:none}
+.logo svg{width:22px;height:22px;stroke:var(--bg);fill:none;stroke-width:1.8;stroke-linecap:round}
+h1{font-size:20px;font-weight:750}
+.role{padding:5px 12px}
+.sub{font-size:15px;line-height:1.5}
+#who{flex:1;min-width:160px;max-width:280px}
+button{transition:border-color .15s,background .15s}
+button:hover:not(:disabled){border-color:var(--ac)}
+.card{border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.tabs{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:4px;gap:4px}
+.tabs button{flex:1;border:0;border-radius:9px;min-height:38px}
+.tabs button[aria-selected=true]{background:var(--ac);color:var(--bg)}
+.chip{border-radius:99px}
+.slots{gap:8px}
+.slot{border-radius:10px;min-height:58px}
+.slot.free:hover{border-color:var(--ac)}
+.slot:disabled{background:transparent;border-style:dashed;opacity:.55}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--mu);margin:12px 0 4px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-1px}
+.bar{height:8px}
+.bar i.md{background:var(--wa)}
+.bar i.hi{background:var(--bad)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;background:var(--ac)}
+.dot.on{background:var(--wa)}
+.dot.off{background:var(--bad)}
+.stat{border-radius:14px;padding:14px}
+.stat b{font-size:30px;margin-bottom:2px}
+th{font-size:13px;color:var(--mu);font-weight:600}
+tr:hover td{background:var(--acs)}
+.note{border-top:1px solid var(--bd);padding-top:14px}
+@media (max-width:520px){.slots{grid-template-columns:repeat(3,1fr)}h1{font-size:18px}.stat b{font-size:26px}}
+.role:empty{display:none}
+.tabs button{padding:8px 4px;font-size:14px}
+.login{max-width:360px;margin:7vh auto 0;display:flex;flex-direction:column;gap:8px}
+.login h2{font-size:22px;margin:0 0 6px}
+.login label{font-size:14px;color:var(--mu);margin-top:6px}
+.login input{width:100%}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:3px;gap:3px}
+.seg button{border:0;border-radius:8px;background:none;color:var(--mu);font-weight:600}
+.seg button[aria-selected=true]{background:var(--ac);color:var(--bg)}
+.go{background:var(--ac);color:var(--bg);border-color:var(--ac);font-weight:600;margin-top:10px}
+</style>
+</head>
+<body>
+<main>
+<div class="top"><div class="brand"><div class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></div><h1>Campus Compute Scheduler</h1></div><div class="row"><span class="role" id="role"></span><button class="chip" id="out" data-logout="1" hidden>Sign out</button></div></div>
+<div id="app"></div>
+<p class="note">Live usage comes from an agent on each lab machine; the busyness heatmap is still an estimate. Sign-in and bookings are stored in Supabase.</p>
+</main>
+<div id="toast" class="toast" hidden></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+var MACH=[{id:"a",n:"GPU Server A",gpu:"NVIDIA RTX 4090 · 24 GB VRAM",cpu:"AMD Ryzen 9 7950X · 16 cores / 32 threads",ram:"64 GB DDR5",sto:"2 TB NVMe SSD"},{id:"b",n:"GPU Server B",gpu:"NVIDIA A100 · 40 GB VRAM",cpu:"Intel Xeon Gold 6338 · 32 cores / 64 threads",ram:"256 GB DDR4 ECC",sto:"4 TB NVMe SSD"},{id:"c",n:"Lab PC 3",gpu:"NVIDIA RTX 3060 · 12 GB VRAM",cpu:"Intel Core i7-12700 · 12 cores / 20 threads",ram:"32 GB DDR4",sto:"1 TB SSD"}];
+function specText(m){return m.cpu+" · "+m.ram+" RAM · "+m.sto+" · "+m.gpu}
+function specCard(m){var r=[["Processor",m.cpu],["RAM",m.ram],["Storage",m.sto],["GPU",m.gpu]];return'<div class="card" style="margin-top:10px"><h3>'+m.n+'</h3><div style="display:grid;grid-template-columns:auto 1fr;gap:2px 14px;font-size:14px">'+r.map(function(x){return'<span class="mu">'+x[0]+'</span><span>'+x[1]+'</span>'}).join("")+'</div></div>'}
+var SB_URL="https://xuqkduxymyddvzgkqfrj.supabase.co",SB_KEY="sb_publishable_AMQA2FPCmCrSWO7rGVKVPg_rsWgUreu",sb=null,RET=location.origin+location.pathname,H0=8,H1=21,DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+var S={role:null,lr:"student",user:"",uid:"",bk:[],st:{a:"active",b:"active",c:"active"},maxh:4,log:[],admin:false,tab:"book",atab:"over",m:"a",day:0,bf:"all"},util={a:0,b:0,c:0};
+function isAdmin(){return S.role=="admin"}
+function dk(d){return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+function addDays(n){var d=new Date();d.setDate(d.getDate()+n);return d}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function fmt(h){return(h%12||12)+(h<12?" am":" pm")}
+function mn(id){return MACH.filter(function(m){return m.id==id})[0].n}
+function ts(b){var p=b.d.split("-");return new Date(+p[0],p[1]-1,+p[2],b.h).getTime()}
+function save(){}
+function clock(n){return fmt(n.getHours()).replace(" ",":"+("0"+n.getMinutes()).slice(-2)+" ")}
+function log(m){S.log.unshift({t:clock(new Date()),m:m});S.log=S.log.slice(0,25);if(sb&&S.uid)sb.from("audit_log").insert({msg:m}).then(function(){})}
+function loadAll(){return sb.auth.getSession().then(function(x){var ss=x.data.session;
+if(!ss){S.role=null;S.uid="";return render()}
+return Promise.all([sb.from("profiles").select("name,role").eq("id",ss.user.id).single(),sb.from("machines").select("id,status"),sb.from("settings").select("maxh").eq("id",1).single(),sb.from("bookings").select("id,user_id,user_name,machine_id,day,slot_hour").gte("day",dk(new Date())),sb.from("audit_log").select("at,msg").order("at",{ascending:false}).limit(25),sb.from("machine_usage").select("machine_id,cpu,ram,gpu,updated_at")]).then(function(r){
+if(r[0].error||!r[0].data){toast("Could not load your profile");S.role=null;return render()}
+S.uid=ss.user.id;S.user=r[0].data.name||"";S.role=r[0].data.role;
+(r[1].data||[]).forEach(function(m){S.st[m.id]=m.status});
+if(r[2].data)S.maxh=r[2].data.maxh;
+S.bk=(r[3].data||[]).map(function(b){return{id:b.id,uid:b.user_id,u:b.user_name,m:b.machine_id,d:b.day,h:b.slot_hour}});
+S.log=(r[4].data||[]).map(function(l){return{t:clock(new Date(l.at)),m:l.msg}});applyUsage(r[5].data);
+render()})})}
+function act(p,msg){return p.then(function(r){if(r&&r.error){var e=r.error;toast(e.message.indexOf("LIMIT")>=0?"Limit reached: "+S.maxh+" hours per day":e.code=="23505"?"That slot was just taken":e.message)}else if(msg)toast(msg);return loadAll()})}
+function toast(t){var e=document.getElementById("toast");e.textContent=t;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(function(){e.hidden=true},2600)}
+function find(m,d,h){return S.bk.filter(function(b){return b.m==m&&b.d==d&&b.h==h})[0]}
+function used(u,d){return S.bk.filter(function(b){return b.uid==u&&b.d==d}).length}
+function nowB(m){var n=new Date();return find(m,dk(n),n.getHours())}
+function idle(m){var b=nowB(m);return b&&S.st[m]=="active"&&online(m)&&util[m]<5?b:null}
+function avg(day,h,mi){var w=(day==0||day==6)?.35:1,p=Math.exp(-Math.pow((h-16)/3.6,2)),r=((day*31+h*17+mi*13)%9)/90;return Math.min(.97,.12+.78*p*w*(1-mi*.12)+r)}
+function tabs(list,cur,key){return'<div class="tabs" role="tablist">'+list.map(function(t){return'<button role="tab" data-'+key+'="'+t[0]+'" aria-selected="'+(cur==t[0])+'">'+t[1]+'</button>'}).join("")+'</div>'}
+function render(){var r=S.role,el=document.getElementById("app");
+document.getElementById("role").textContent=r=="admin"?"Admin":r=="student"?"Student":"";
+document.getElementById("out").hidden=!r;
+el.innerHTML=!r?loginV():r=="admin"?adminV():studentV()}
+/* ---------- student ---------- */
+function studentV(){var o='<p class="sub">Signed in as <b>'+esc(S.user)+'</b>. Check the specs, book a slot, and find the quietest time.</p>';
+o+=tabs([["book","Book"],["mine","My bookings"],["best","Best times"]],S.tab,"t");
+return o+(S.tab=="book"?bookV():S.tab=="mine"?mineV():bestV())}
+function bookV(){var k=dk(addDays(S.day)),n=new Date(),o='<div class="row">';
+MACH.forEach(function(m){o+='<button class="chip'+(S.m==m.id?" on":"")+'" data-m="'+m.id+'">'+m.n+'</button>'});
+o+='</div><div class="row" style="margin-top:8px">';
+for(var i=0;i<7;i++){var x=addDays(i);o+='<button class="chip'+(S.day==i?" on":"")+'" data-d="'+i+'">'+(i?DAYS[x.getDay()]+" "+x.getDate():"Today")+'</button>'}
+o+='</div>'+specCard(MACH.filter(function(m){return m.id==S.m})[0]);
+if(S.st[S.m]!="active")o+='<div class="alert">This machine is under maintenance and cannot be booked.</div>';
+o+='<div class="slots">';
+for(var h=H0;h<=H1;h++){var b=find(S.m,k,h),c="free",l="Free",dis=false;
+if(S.st[S.m]!="active"){c="x";l="Unavailable";dis=true}
+else if(b&&b.uid==S.uid){c="mine";l="Yours · cancel"}
+else if(b){c="x";l=esc(b.u);dis=true}
+else if(S.day==0&&h<n.getHours()){c="x";l="Past";dis=true}
+o+='<button class="slot '+c+'" data-h="'+h+'"'+(dis?" disabled":"")+'><b>'+fmt(h)+'</b>'+l+'</button>'}
+return o+'</div><div class="legend"><span><i style="background:var(--acs)"></i>Free</span><span><i style="background:var(--ac)"></i>Yours</span><span><i style="border:1px dashed var(--mu)"></i>Taken</span></div><p class="mu">Rule: max '+S.maxh+' hours per person per day.</p>'}
+function mineV(){var l=S.bk.filter(function(b){return b.uid==S.uid}).sort(function(a,b){return ts(a)-ts(b)});
+if(!S.user)return'<div class="empty">Enter your name above to see your bookings.</div>';
+if(!l.length)return'<div class="empty">No bookings yet. Open the Book tab and tap a free slot.</div>';
+return l.map(function(b){return'<div class="card row" style="justify-content:space-between"><div>'+mn(b.m)+'<div class="mu">'+b.d.split("-").slice(1).join("/")+' · '+fmt(b.h)+'</div></div><button data-cancel="'+S.bk.indexOf(b)+'">Cancel</button></div>'}).join("")}
+function liveV(adm){var o="";
+MACH.forEach(function(m){var b=nowB(m.id),u=online(m.id)?Math.round(util[m.id]):0,off=S.st[m.id]!="active",i=idle(m.id);
+o+='<div class="card"><h3><span class="dot '+(off?'off':b?'on':'')+'"></span>'+m.n+'</h3><div class="mu">'+specText(m)+(off?' · maintenance':'')+'</div><div class="bar"><i class="'+(u>85?'hi':u>60?'md':'')+'" style="width:'+u+'%"></i></div><div>'+(online(m.id)?'CPU '+Math.round(S.use[m.id].cpu)+'% · RAM '+Math.round(S.use[m.id].ram)+'% · GPU '+Math.round(S.use[m.id].gpu)+'%':'<span class="mu">Agent offline, no live data</span>')+'</div><div class="mu">'+(b?'Booked by '+esc(b.u):'Not booked right now')+'</div>';
+if(adm&&i)o+='<div class="alert">'+esc(i.u)+' booked this machine but it looks idle.<br><button data-nudge="'+esc(i.u)+'">Send reminder</button><button data-release="'+m.id+'">Release slot</button></div>';
+o+='</div>'});return o}
+function bestV(){var k=new Date(),h=k.getHours(),dy=k.getDay(),L=[],o='<div class="card"><h3>Quietest times today</h3>';
+MACH.forEach(function(m,mi){if(S.st[m.id]!="active")return;for(var x=Math.max(H0,h+1);x<=H1;x++)if(!find(m.id,dk(k),x))L.push({m:m.n,h:x,v:avg(dy,x,mi)})});
+L.sort(function(a,b){return a.v-b.v});L=L.slice(0,3);
+o+=L.length?L.map(function(r){return'<div>'+fmt(r.h)+' on '+r.m+' <span class="mu">usually '+Math.round(r.v*100)+'% busy</span></div>'}).join(""):'<div class="empty">No free slots left today. Check tomorrow.</div>';
+return o+'</div>'+heat()}
+function heat(){var o='<div class="card"><h3>Usual busyness by day and hour</h3><div class="mu">Darker means busier, based on past usage averages.</div><div class="wrap"><div class="heat" style="margin-top:8px"><div></div>';
+for(var x=H0;x<=H1;x++)o+='<div>'+(x%12||12)+'</div>';
+for(var d=1;d<=7;d++){var dd=d%7;o+='<div>'+DAYS[dd]+'</div>';for(var x=H0;x<=H1;x++){var v=(avg(dd,x,0)+avg(dd,x,1)+avg(dd,x,2))/3;o+='<div title="'+Math.round(v*100)+'% busy" style="background:color-mix(in srgb,var(--ac) '+Math.round(v*100)+'%,var(--card))"></div>'}}
+return o+'</div></div></div>'}
+/* ---------- admin ---------- */
+function loginV(){return'<div class="login"><h2>Sign in</h2><button class="go" data-login="google">Continue with Google</button><label for="em">Or use your campus email</label><input id="em" type="email" autocomplete="email" placeholder="you@yourcollege.edu"><button class="go" data-login="email">Email me a sign-in link</button><p class="mu">Use your campus account. Admin access is granted by the lab manager.</p></div>'}
+document.addEventListener("keydown",function(e){if(e.key=="Enter"&&e.target.id=="em"){document.querySelector('[data-login="email"]').click()}});
+function adminV(){var o='';
+o+=tabs([["over","Overview"],["mon","Monitor"],["all","Bookings"],["set","Settings"]],S.atab,"a");
+return o+(S.atab=="over"?overV():S.atab=="mon"?liveV(true):S.atab=="all"?allV():setV())}
+function overV(){var k=dk(new Date()),act=MACH.filter(function(m){return S.st[m.id]=="active"}).length,av=0,al=0;
+MACH.forEach(function(m){av+=util[m.id];if(idle(m.id))al++});av=Math.round(av/MACH.length);
+var td=S.bk.filter(function(b){return b.d==k}).length;
+var o='<div class="stats"><div class="stat"><b>'+act+'/'+MACH.length+'</b><span class="mu">Machines active</span></div><div class="stat"><b>'+av+'%</b><span class="mu">Avg CPU/GPU use now</span></div><div class="stat"><b>'+td+'</b><span class="mu">Bookings today</span></div><div class="stat"><b>'+al+'</b><span class="mu">Idle alerts</span></div></div>';
+o+='<div class="card"><h3>Recent activity</h3>'+(S.log.length?S.log.slice(0,8).map(function(l){return'<div class="mu">'+l.t+' · '+esc(l.m)+'</div>'}).join(""):'<div class="empty">No activity yet.</div>')+'</div>';
+return o+heat()}
+function allV(){var l=S.bk.filter(function(b){return S.bf=="all"||b.m==S.bf}).sort(function(a,b){return ts(a)-ts(b)});
+var o='<div class="row" style="margin-bottom:8px"><label for="bf">Machine</label><select id="bf"><option value="all">All</option>'+MACH.map(function(m){return'<option value="'+m.id+'"'+(S.bf==m.id?" selected":"")+'>'+m.n+'</option>'}).join("")+'</select></div>';
+if(!l.length)return o+'<div class="empty">No bookings found.</div>';
+return o+'<div class="wrap"><table><tr><th>Student</th><th>Machine</th><th>Date</th><th>Time</th><th></th></tr>'+l.map(function(b){return'<tr><td>'+esc(b.u)+'</td><td>'+mn(b.m)+'</td><td>'+b.d.split("-").slice(1).join("/")+'</td><td>'+fmt(b.h)+'</td><td><button data-acancel="'+S.bk.indexOf(b)+'">Cancel</button></td></tr>'}).join("")+'</table></div>'}
+function setV(){var o='<div class="card"><h3>Machines</h3>';
+MACH.forEach(function(m){o+='<div class="row" style="justify-content:space-between;margin:6px 0"><span>'+m.n+'</span><select data-st="'+m.id+'" aria-label="Status of '+m.n+'"><option value="active"'+(S.st[m.id]=="active"?" selected":"")+'>Active</option><option value="maint"'+(S.st[m.id]!="active"?" selected":"")+'>Maintenance</option></select></div>'});
+return o+'</div><div class="card"><h3>Booking rules</h3><div class="row"><label for="mh">Max hours per student per day</label><input id="mh" type="number" min="1" max="12" value="'+S.maxh+'" style="width:80px"></div></div>'}
+/* ---------- events ---------- */
+document.addEventListener("click",function(e){var t=e.target.closest("button");if(!t||!sb)return;var d=t.dataset;
+if(d.t){S.tab=d.t}else if(d.a){S.atab=d.a}else if(d.m){S.m=d.m}else if(d.d!==undefined){S.day=+d.d}
+else if(d.nudge){toast("Reminder sent to "+d.nudge);log("Idle reminder sent to "+d.nudge)}
+else if(d.release){var b=nowB(d.release);if(b){log("Released idle slot on "+mn(d.release)+" from "+b.u);act(sb.from("bookings").delete().eq("id",b.id),"Slot released")}return}
+else if(d.login=="google"){sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:RET}});return}
+else if(d.login=="email"){var em=document.getElementById("em").value.trim();if(!em){toast("Enter your email");return}sb.auth.signInWithOtp({email:em,options:{emailRedirectTo:RET}}).then(function(r){toast(r.error?r.error.message:"Check your email for the sign-in link")});return}
+else if(d.logout!==undefined){sb.auth.signOut();return}
+else if(d.cancel!==undefined||d.acancel!==undefined){var x=S.bk[+(d.cancel!==undefined?d.cancel:d.acancel)];if(x){log((d.acancel!==undefined?"Admin cancelled ":"")+x.u+" cancelled "+mn(x.m)+" "+fmt(x.h));act(sb.from("bookings").delete().eq("id",x.id),"Booking cancelled")}return}
+else if(d.h){var h=+d.h,k=dk(addDays(S.day)),bb=find(S.m,k,h);
+if(bb&&bb.uid==S.uid){log(S.user+" cancelled "+mn(S.m)+" "+fmt(h));act(sb.from("bookings").delete().eq("id",bb.id),"Booking cancelled")}
+else if(!bb){if(used(S.uid,k)>=S.maxh){toast("Limit reached: "+S.maxh+" hours per day");return}log(S.user+" booked "+mn(S.m)+" "+fmt(h));act(sb.from("bookings").insert({machine_id:S.m,day:k,slot_hour:h}),"Booked "+fmt(h))}return}
+else return;
+render()});
+document.addEventListener("change",function(e){var t=e.target;
+if(t.id=="bf"){S.bf=t.value;render()}
+else if(t.id=="mh"){var v=Math.max(1,Math.min(12,+t.value||4));log("Max hours set to "+v);act(sb.from("settings").update({maxh:v}).eq("id",1),"Rule saved")}
+else if(t.dataset.st){log(mn(t.dataset.st)+" set to "+t.value);act(sb.from("machines").update({status:t.value}).eq("id",t.dataset.st),"Machine updated")}});
+window.addEventListener("hashchange",render);
+S.use={};
+function applyUsage(rows){(rows||[]).forEach(function(u){S.use[u.machine_id]={cpu:u.cpu,ram:u.ram,gpu:u.gpu,at:new Date(u.updated_at).getTime()};util[u.machine_id]=Math.max(u.cpu,u.gpu)})}
+function online(id){var u=S.use[id];return !!u&&Date.now()-u.at<120000}
+function tick(){var f=document.activeElement&&/INPUT|SELECT/.test(document.activeElement.tagName);
+if(!f&&isAdmin()&&(S.atab=="mon"||S.atab=="over"))render()}
+if(/^YOUR_/.test(SB_URL)){document.getElementById("app").innerHTML='<div class="alert">Setup needed: put your Supabase URL and anon key at the top of the script (SB_URL and SB_KEY).</div>'}
+else{sb=supabase.createClient(SB_URL,SB_KEY);sb.auth.onAuthStateChange(function(){setTimeout(loadAll,0)});
+sb.channel("bk").on("postgres_changes",{event:"*",schema:"public",table:"bookings"},function(){if(S.role)loadAll()}).on("postgres_changes",{event:"*",schema:"public",table:"machine_usage"},function(p){if(p.new&&p.new.machine_id){applyUsage([p.new]);tick()}}).subscribe()}
+tick();setInterval(tick,2000);render();
+</script>
+</body>
+</html>
